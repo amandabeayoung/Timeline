@@ -1,0 +1,113 @@
+---
+title: "ShinyTimeline"
+author: "Amanda B. Young"
+date: "4/10/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+
+```{r libraries, message=FALSE, warning = FALSE}
+library(timevis)
+library(shiny)
+library(dplyr)
+
+
+```
+
+Data for the timeline, not complete by any means
+```{r data}
+data1 <- data.frame(
+  id      = 1:13,
+  content = c("Completion of Haul Road", 
+              "Haul Road open to public",
+              "Aquatic Research Begins @ Toolik",
+              "Terrestrial surveys along Pipeline",
+              "Terrestrial Research @ Toolik",
+              "R4D study @ Imnaviat Creek",
+              "1st trailer!",
+              "Kitchen/Dining",
+              "Labratory",
+              "Labratory -> washup trailer",
+              "Temp Wooden Structure - Labs",
+              "University Toolik Camp",
+              "Toolik Field Station"),
+  start   = c("1974-09-15", "1994-07-11",
+              "1975-06-01", "1975-06-01", 
+              "1979-06-01", "1982-06-01",
+              "1975-06-01", "1976-06-01",
+              "1980-06-01", "1982-06-01",
+              "1977-06-01", "1975-06-01",
+              "1983-06-01"),
+  end     = c(NA, NA, NA, NA, NA, "1990-06-01", NA, NA, NA, NA, "1982-09-01",
+              "1983-06-01", "2020-06-01"),
+  style = c(NA, "color: red",NA,NA,NA,NA, NA, NA, NA, NA, NA, NA,NA),
+  type = c("point", "point", "point", "point", "point", "range", "point", "point",
+           "point","point","range", "range", "range"),
+  group = c(2,2,1,1,1,1,2,2,2,2,2,2,2),
+  className = c("red_point", "blue_point", "red_point", "blue_point", "red_point", "blue_range", 
+                "black_point", "green_point","red_point","red_point","red_range", "blue_range", "green_range"))
+
+head(data1, n=11)
+```
+
+
+Shiny code to let the timeline adapt based on if you select: Science, Infrastructure, or click both
+```{r shiny code}
+
+ui <- fluidPage(
+  titlePanel("Toolik Timeline"),
+  sidebarLayout(
+    sidebarPanel(
+      helpText("Select which groups you want to see a timeline for"),
+      checkboxGroupInput("checkGroup", 
+                         label =("Checkbox group"), 
+                         choices = list("Science" = 1, 
+                                        "Infrastructure" = 2),
+                         selected = c(1, 2))),
+    mainPanel(
+      tags$head(
+        tags$style(HTML("
+                        .red_point  { border-color: #c92c1a;    }
+                        .blue_point { border-color: #65c4f0;   }
+                        .green_point  { border-color: #4ceb34;    }
+                        .black_point { border-color: black;   }
+                        .red_range  { border-color: #c92c1a; background-color:#c92c1a   }
+                        .blue_range { border-color: #65c4f0; background-color:#65c4f0  }
+                        .green_range { border-color: #4ceb34; background-color:#4ceb34  }
+
+                        "))),
+      timevisOutput("AAA")
+      )
+  )
+)
+
+server <- function(input, output) {
+  output$AAA<-renderTimevis({
+  filtered<-
+    data1 %>%
+    filter(group %in% input$checkGroup)
+  timevis(filtered)
+  })
+}       
+       
+```
+   
+   
+#Shiny Toolik Timeline
+
+Colours do not mean anything here. I was just playing to see if I could add colours.  Turns out I can by mixing HTML tags along with the R code. 
+  - points are for seemingly discrete events
+  - boxes are for things that occured over a period of time.
+  - If you zome in the text in the boxes will beomce legible.
+```{r}
+shinyApp(ui = ui, server = server)
+
+```
+
+
